@@ -136,16 +136,17 @@ async function ocrWithGemini(imagePath) {
 
 // ─── ノート作成・保存 ────────────────────────────────────────────────────────
 
-function buildNote(imageFileName, title, part, ocrText) {
+function buildNote(imageFileName, part, link, ocrText) {
   const template = fs.readFileSync(TEMPLATE_PATH, 'utf8');
   return template
-    .replace(/^part:$/m, `part: ${part}\ntitle: ${title}`)
+    .replace(/^part:$/m, `part: ${part}`)
+    .replace(/^link:$/m, `link: ${link}`)
     .replace('#### OCR', `![[${imageFileName}]]\n\n#### OCR`)
     .replace('<sup> content</sup>', `<sup>${ocrText}</sup>`);
 }
 
-function saveNote(content, fileTag) {
-  const fileName = `ImageBank_${fileTag}.md`;
+function saveNote(content, title) {
+  const fileName = `${title}.md`;
   const filePath = path.join(IMAGEBANK_DIR, fileName);
 
   if (fs.existsSync(filePath)) {
@@ -176,8 +177,8 @@ async function main() {
     process.exit(1);
   }
 
-  // 2. Titleを入力
-  const title = inputDialog('Title を入力');
+  // 2. Titleを入力（ノート名）
+  const title = inputDialog('Title（ノート名）を入力');
   if (title === null) {
     fs.unlinkSync(tmpImagePath);
     console.log('キャンセルされました。');
@@ -192,19 +193,27 @@ async function main() {
     return;
   }
 
-  // 4. OCR
+  // 4. Linkを入力（任意）
+  const link = inputDialog('Link（なければ空のままOK）');
+  if (link === null) {
+    fs.unlinkSync(tmpImagePath);
+    console.log('キャンセルされました。');
+    return;
+  }
+
+  // 5. OCR
   console.log('⏳ OCR 処理中...');
   const ocrText = await ocrWithGemini(tmpImagePath);
 
-  // 5. 画像をattachmentsへコピー
+  // 6. 画像をattachmentsへコピー
   const imageFileName = `ImageBank_${fileTag}.png`;
   const imageDest = path.join(ATTACHMENTS_DIR, imageFileName);
   fs.copyFileSync(tmpImagePath, imageDest);
   fs.unlinkSync(tmpImagePath);
 
-  // 6. ノートを作成・保存
-  const noteContent = buildNote(imageFileName, title, part, ocrText);
-  const noteFileName = saveNote(noteContent, fileTag);
+  // 7. ノートを作成・保存
+  const noteContent = buildNote(imageFileName, part, link, ocrText);
+  const noteFileName = saveNote(noteContent, title);
 
   console.log(`✅ 保存完了: ${noteFileName}`);
 }
