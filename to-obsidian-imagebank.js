@@ -22,7 +22,7 @@ let config = {};
 try { config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); } catch {}
 
 const GEMINI_API_KEY = config.geminiApiKey || process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = config.geminiModel || 'gemini-3.1-flash-lite-preview';
+const GEMINI_MODEL = config.geminiModel || 'gemini-3.1-flash-lite';
 
 const MED_DIR = path.join(HOME, 'Library/Mobile Documents/iCloud~md~obsidian/Documents/Med');
 const IMAGEBANK_DIR = path.join(MED_DIR, 'ImageBank');
